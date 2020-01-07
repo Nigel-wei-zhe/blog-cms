@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser');
+const session = require('express-session')
+const flash = require('connect-flash');
 const logger = require('morgan');
 
 const indexRouter = require('./routes/index');
@@ -22,6 +24,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: 'zxcvasdsfwwbrbrw',
+  resave: true,
+  saveUninitialized: true,
+  cookie: { maxAge: 100 * 1000 }
+}));
+app.use(flash());
 
 app.use('/', indexRouter);
 app.use('/dashboard', dashboardRouter);
