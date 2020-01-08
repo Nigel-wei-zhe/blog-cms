@@ -1,12 +1,42 @@
 const express = require('express');
 const router = express.Router();
+const stringtags = require('striptags');
+const moment = require('moment');
 const firebaseAdminDb = require('../connection/firebase-admin-connect');
 
 const categoriesRef = firebaseAdminDb.ref('/categories/');
 const articlesRef = firebaseAdminDb.ref('/article/');
 
 router.get('/archives', function(req, res, next) {
-  res.render('dashboard/archives', { title: 'Express' });
+  const status = req.query.status || 'public';
+  let categories = {};
+  categoriesRef.once('value').then( snapshot => {
+    categories = snapshot.val();
+    return articlesRef.orderByChild('update_time').once('value');
+  }).then( snapshot => {
+    const articles = [];
+    snapshot.forEach(snapshotChild => {
+      if ( status === snapshotChild.val().status) {
+        articles.push(snapshotChild.val());
+      };
+    })
+    articles.reverse();
+    res.render('dashboard/archives', {
+      articles,
+      categories,
+      stringtags,
+      moment,
+      status,
+    });
+  });
+});
+
+router.post('/archives/delete/:id', function(req, res, next) {
+  const id = req.params.id;
+  articlesRef.child(id).remove();
+  req.flash('info', '文章已刪除');
+  res.send('文章已刪除');
+  res.end();
 });
 
 router.get('/article/create', function(req, res, next) {
