@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const stringtags = require('striptags');
 const moment = require('moment');
+const convertPagenation = require('../modules/convertPagenation');
 const firebaseAdminDb = require('../connection/firebase-admin-connect');
 
 const categoriesRef = firebaseAdminDb.ref('/categories/');
-const articlesRef = firebaseAdminDb.ref('/article/');
+const articlesRef = firebaseAdminDb.ref('/articles/');
 
 router.get('/archives', function(req, res, next) {
+  let currentPage = Number.parseInt(req.query.page) || 1;
   const status = req.query.status || 'public';
   let categories = {};
   categoriesRef.once('value').then( snapshot => {
@@ -21,8 +23,10 @@ router.get('/archives', function(req, res, next) {
       };
     })
     articles.reverse();
+    const data = convertPagenation(articles, currentPage)
     res.render('dashboard/archives', {
-      articles,
+      articles: data.result,
+      page: data.page,
       categories,
       stringtags,
       moment,
