@@ -8,6 +8,10 @@ const firebaseAdminDb = require('../connection/firebase-admin-connect');
 const categoriesRef = firebaseAdminDb.ref('/categories/');
 const articlesRef = firebaseAdminDb.ref('/articles/');
 
+router.get('/', function(req, res, next) {
+  res.render('dashboard/welcome');
+});
+
 router.get('/archives', function(req, res, next) {
   let currentPage = Number.parseInt(req.query.page) || 1;
   const status = req.query.status || 'public';
