@@ -19,8 +19,9 @@ router.post('/signup', function(req, res, next) {
     const confirmPassword = req.body.confirmPassword;
     if (password === confirmPassword) {
         fireAuth.createUserWithEmailAndPassword(email, password)
-        .then(user => {        
-            res.redirect('/dashboard');
+        .then(user => {      
+            req.flash('error', '註冊成功，請登入'); 
+            res.redirect('/auth?mode=signin');
         })
         .catch(err => {
             const errorMessage = err.message;
@@ -37,7 +38,9 @@ router.post('/signin', function(req, res, next) {
     const email = req.body.email;
     const password = req.body.password;
     fireAuth.signInWithEmailAndPassword(email, password)
-    .then(user => {        
+    .then(user => {
+        req.session.uid = user.user.uid;
+        console.log(user.user.uid);
         res.redirect('/dashboard');
     })
     .catch(err => {
@@ -47,9 +50,10 @@ router.post('/signin', function(req, res, next) {
     });
 });
 
-router.post('/signout', function(req, res, next) {
-    res.send('已登出');
-    res.end();
+router.get('/signout', function(req, res, next) {
+    req.flash('error', '已登出');
+    req.session.destroy();
+    res.redirect('/auth?mode=signin');
 });
 
 

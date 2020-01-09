@@ -12,7 +12,6 @@ const convertPagenation = function (data, currentPage) {
       let itemNum = index + 1;
       if (itemNum >= minItem && itemNum <= maxItem) {
         result.push(item);
-        console.log(item.title);
       }
     });
     const page = {

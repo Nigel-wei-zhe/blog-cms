@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser');
-const session = require('express-session')
+const session = require('express-session');
 const flash = require('connect-flash');
 const logger = require('morgan');
 
@@ -13,6 +13,7 @@ const authRouter = require('./routes/auth');
 
 const app = express();
 
+require('dotenv').config();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.engine('ejs', require('express-ejs-extend'));
@@ -33,9 +34,16 @@ app.use(session({
 }));
 app.use(flash());
 
+const authCheck = function (req, res, next) {
+  if (req.session.uid === process.env.ADMIN_UID) {
+    return next();
+  }
+  return res.redirect('/auth?mode=signin');
+};
+
 app.use('/', indexRouter);
-app.use('/dashboard', dashboardRouter);
 app.use('/auth', authRouter);
+app.use('/dashboard', authCheck, dashboardRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
