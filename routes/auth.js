@@ -4,27 +4,47 @@ const firebaseAdminDb = require('../connection/firebase-admin-connect');
 const firebase = require('../connection/firebase-connect');
 const fireAuth = firebase.auth();
 
-router.get('/signup', function(req, res, next) {
-    res.render('dashboard/signup');
+router.get('/', function(req, res, next) {
+    const message = req.flash('error'); // object
+    res.render('dashboard/signup', {
+        mode: req.query.mode || 'signin',
+        hasError: message.length > 0,
+        message
+    });
 });
 
 router.post('/signup', function(req, res, next) {
     const email = req.body.email;
     const password = req.body.password;
-    fireAuth.createUserWithEmailAndPassword(email, password)
-    .then(user => {
-        
+    const confirmPassword = req.body.confirmPassword;
+    if (password === confirmPassword) {
+        fireAuth.createUserWithEmailAndPassword(email, password)
+        .then(user => {        
+            res.redirect('/dashboard');
+        })
+        .catch(err => {
+            const errorMessage = err.message;
+            req.flash('error', errorMessage);
+            res.redirect('/auth?mode=signup');
+        });
+    } else {
+        req.flash('error', ' 密碼 與 確認密碼 不一致');
+        res.redirect('/auth?mode=signup');
+    };
+});
+
+router.post('/signin', function(req, res, next) {
+    const email = req.body.email;
+    const password = req.body.password;
+    fireAuth.signInWithEmailAndPassword(email, password)
+    .then(user => {        
         res.redirect('/dashboard');
     })
     .catch(err => {
-        res.redirect('/auth/signup');
+        const errorMessage = err.message;
+        req.flash('error', errorMessage);
+        res.redirect('/auth?mode=signin');
     });
-    res.send('註冊成功');
-    res.end();
-});
-
-router.get('/signin', function(req, res, next) {
-    res.render('dashboard/signin');
 });
 
 router.post('/signout', function(req, res, next) {
