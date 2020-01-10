@@ -3,9 +3,14 @@
 <div class="row justify-content-center">
   <div class="col-md-6">
     
-
+    <% if (hasInfo) { %>
+      <% for (var prop in messages) {%>
+        <div class="alert alert-danger">
+          <%- messages[prop] %>
+        </div>
+      <% } %>
+    <% } %>
     
-
     <div class="btn-group w-100">
       <a href="/dashboard/archives?status=public" class="btn btn-outline-secondary w-100 rounded-0 <% if (status === 'public') { %> active <% } %> ">已發佈</a>
       <a href="/dashboard/archives?status=draft" class="btn btn-outline-secondary w-100 rounded-0 <% if (status === 'draft') { %> active <% } %> ">草稿</a>

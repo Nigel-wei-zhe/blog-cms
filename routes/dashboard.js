@@ -13,6 +13,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/archives', function(req, res, next) {
+  const messages = req.flash('info');
   let currentPage = Number.parseInt(req.query.page) || 1;
   const status = req.query.status || 'public';
   let categories = {};
@@ -29,6 +30,8 @@ router.get('/archives', function(req, res, next) {
     articles.reverse();
     const data = convertPagenation(articles, currentPage)
     res.render('dashboard/archives', {
+      hasInfo: messages.length > 0,
+      messages,
       articles: data.result,
       page: data.page,
       categories,
@@ -74,6 +77,26 @@ router.get('/article/:id', function(req, res, next) {
     })
 });
 
+router.post('/article/create', function(req, res, next) {
+  const data = {...req.body};
+  const articleRef = articlesRef.push();
+  const key = articleRef.key;
+  const updateTime = Math.floor(Date.now() / 1000);
+  data.id = key;
+  data.update_time = updateTime;
+  articleRef.set(data).then(() => {
+    res.redirect(`/dashboard/archives`);
+  });
+});
+
+router.post('/article/update/:id', function(req, res, next) {
+  const data = {...req.body};
+  const id = req.params.id;
+  articlesRef.child(id).update(data).then(() => {
+      res.redirect(`/dashboard/archives`);
+  });
+});
+
 router.get('/categories', function(req, res, next) {
   const messages = req.flash('info');
   categoriesRef.once('value').then(snapshot => {
@@ -85,32 +108,6 @@ router.get('/categories', function(req, res, next) {
     });
   })
 });
-
-router.get('/signup', function(req, res, next) {
-  res.render('dashboard/signup', { title: 'Express' });
-});
-
-
-router.post('/article/create', function(req, res, next) {
-    const data = {...req.body};
-    const articleRef = articlesRef.push();
-    const key = articleRef.key;
-    const updateTime = Math.floor(Date.now() / 1000);
-    data.id = key;
-    data.update_time = updateTime;
-    articleRef.set(data).then(() => {
-        res.redirect(`/dashboard/article/${key}`);
-    });
-});
-
-router.post('/article/update/:id', function(req, res, next) {
-    const data = {...req.body};
-    const id = req.params.id;
-    articlesRef.child(id).update(data).then(() => {
-        res.redirect(`/dashboard/article/${id}`);
-    });
-});
-
 
 router.post('/categories/create', function(req, res, next) {
   const data = {...req.body};
