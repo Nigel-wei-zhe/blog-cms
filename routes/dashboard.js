@@ -51,7 +51,10 @@ router.get('/article/create', function(req, res, next) {
   categoriesRef.once('value').then( snapshot => {
       const categories = snapshot.val();
       res.render('dashboard/article', {
-        categories
+        categories,
+        article: {
+          status: 'draft'
+        }
       });
   });
 });
@@ -132,6 +135,27 @@ router.post('/categories/delete/:id', function(req, res, next) {
     categoriesRef.child(id).remove();
     req.flash('info', '欄位已刪除');
     res.redirect('/dashboard/categories');
+});
+
+router.get('/preview/:id', function(req, res, next) {
+  const id = req.params.id;
+  let categories = {};
+  categoriesRef.once('value').then( snapshot => {
+      categories = snapshot.val();
+      return articlesRef.child(id).once('value');
+  }).then(snapshot => {
+      const article = snapshot.val();
+      if (!article) {
+        return res.render('error', {
+          title: "找不到該文章"
+        })
+      }
+      res.render('dashboard/preview', {
+        categories,
+        article,
+        moment
+      });
+  })
 });
 
 module.exports = router;
