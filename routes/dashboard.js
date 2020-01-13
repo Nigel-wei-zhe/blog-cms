@@ -144,6 +144,7 @@ router.get('/preview/:id', function(req, res, next) {
       const article = snapshot.val();
       if (!article) {
         return res.render('error', {
+          categories,
           title: "找不到該文章"
         })
       }

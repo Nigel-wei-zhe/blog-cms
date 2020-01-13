@@ -9,7 +9,7 @@ const categoriesRef = firebaseAdminDb.ref('/categories');
 const articlesRef = firebaseAdminDb.ref('/articles');
 
 router.get('/', function(req, res, next) {
-  let currentPage = Number.parseInt(req.query.page) || 1;
+  const currentPage = Number.parseInt(req.query.page) || 1;
   let categories = {};
   categoriesRef.once('value').then(snapshot => {
     categories = snapshot.val();
@@ -18,6 +18,43 @@ router.get('/', function(req, res, next) {
     const articles = [];
     snapshot.forEach(snapshotChild => {
       if ('public' === snapshotChild.val().status ) {
+        articles.push(snapshotChild.val());
+      }
+    });
+    articles.reverse();
+    const data = convertPagenation(articles, currentPage);
+    res.render('index', {
+      categories,
+      articles: data.result,
+      page: data.page,
+      stringtags,
+      moment
+    });
+  });
+});
+
+router.get('/archives/:category', function(req, res, ne) {
+  const currentPage = Number.parseInt(req.query.page) || 1;
+  let categories = {};
+  let sortid = '';
+  categoriesRef.once('value').then(snapshot => {
+    categories = snapshot.val();
+    snapshot.forEach(snapshotChild => {
+      if (snapshotChild.val().path === req.params.category) {
+        sortid = snapshotChild.val().id;
+      };
+    });
+    return articlesRef.orderByChild('update_time').once('value');
+  }).then(snapshot => {
+    const articles = [];
+    if (!sortid) {
+      return res.render('error', {
+        categories,
+        title: "找不到該分類文章"
+      })
+    }
+    snapshot.forEach(snapshotChild => {
+      if ('public' === snapshotChild.val().status && sortid === snapshotChild.val().category) {
         articles.push(snapshotChild.val());
       }
     });
@@ -43,6 +80,7 @@ router.get('/post/:id', function(req, res, next) {
       const article = snapshot.val();
       if (!article) {
         return res.render('error', {
+          categories,
           title: "找不到該文章"
         })
       }
